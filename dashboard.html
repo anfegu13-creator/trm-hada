@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRM USD/COP — Grupo Hada</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --v1: #1B5E20; --v2: #2E7D32; --v3: #388E3C;
+      --v4: #66BB6A; --v5: #A5D6A7; --v6: #E8F5E9; --v7: #F1F8E9;
+      --blanco: #FFFFFF; --texto: #424242; --borde: #C8E6C9;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--v7); color: var(--texto); }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, var(--v1), var(--v2));
+      padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    header img { height: 48px; filter: brightness(0) invert(1); }
+    .hdr-title h1 { color: var(--blanco); font-size: 1.3rem; font-weight: 700; }
+    .hdr-title p  { color: var(--v5); font-size: 0.78rem; margin-top: 2px; }
+    .hdr-right { text-align: right; color: var(--v5); font-size: 0.75rem; }
+    .hdr-right span { color: var(--blanco); font-weight: 700; font-size: 0.95rem; display: block; }
+
+    main { max-width: 1400px; margin: 0 auto; padding: 22px 22px 48px; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 6px; margin-bottom: 22px; flex-wrap: wrap; }
+    .tab {
+      padding: 8px 22px; border-radius: 24px; font-size: 0.83rem; font-weight: 700;
+      cursor: pointer; border: 2px solid var(--v4); background: var(--blanco);
+      color: var(--v2); transition: all 0.18s;
+    }
+    .tab:hover, .tab.active { background: var(--v2); color: var(--blanco); border-color: var(--v2); }
+
+    /* PANEL */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* KPI GRID */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 14px; margin-bottom: 20px; }
+    .kpi {
+      background: var(--blanco); border: 1px solid var(--borde); border-radius: 12px;
+      padding: 18px 20px; box-shadow: 0 1px 4px rgba(46,125,50,.07);
+    }
+    .kpi .lbl { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .8px; color: var(--v2); font-weight: 700; margin-bottom: 6px; }
+    .kpi .val { font-size: 1.65rem; font-weight: 800; color: var(--v1); }
+    .kpi .sub { font-size: 0.74rem; color: #757575; margin-top: 3px; }
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+    .up   { background: #E8F5E9; color: #2E7D32; }
+    .down { background: #FFEBEE; color: #C62828; }
+    .flat { background: #F5F5F5; color: #616161; }
+
+    /* FILTER BAR */
+    .fbar {
+      background: var(--blanco); border: 1px solid var(--borde); border-radius: 12px;
+      padding: 16px 20px; margin-bottom: 18px; box-shadow: 0 1px 4px rgba(46,125,50,.07);
+    }
+    .fbar-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 10px; }
+    .fg { display: flex; flex-direction: column; gap: 3px; }
+    .fg label { font-size: 0.68rem; font-weight: 700; color: var(--v1); text-transform: uppercase; letter-spacing: .5px; }
+    .fg input, .fg select {
+      border: 1.5px solid var(--borde); border-radius: 8px; padding: 6px 11px;
+      font-size: 0.85rem; background: var(--v6); outline: none;
+    }
+    .fg input:focus, .fg select:focus { border-color: var(--v3); }
+    .btn { padding: 7px 16px; border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all .18s; }
+    .btn-p { background: var(--v2); color: var(--blanco); }
+    .btn-p:hover { background: var(--v1); }
+    .btn-o { background: var(--blanco); border: 1.5px solid var(--v2); color: var(--v2); }
+    .btn-o:hover { background: var(--v6); }
+    .qbtns { display: flex; gap: 7px; flex-wrap: wrap; }
+    .qb {
+      padding: 4px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+      cursor: pointer; border: 1.5px solid var(--v4); background: var(--blanco); color: var(--v2); transition: all .16s;
+    }
+    .qb:hover, .qb.active { background: var(--v2); color: var(--blanco); border-color: var(--v2); }
+
+    /* CARDS */
+    .card {
+      background: var(--blanco); border: 1px solid var(--borde); border-radius: 12px;
+      padding: 22px; margin-bottom: 18px; box-shadow: 0 1px 4px rgba(46,125,50,.07);
+    }
+    .card h2 { font-size: 0.9rem; font-weight: 700; color: var(--v1); margin-bottom: 14px; }
+    .chart-wrap { position: relative; height: 340px; }
+    .chart-wrap-sm { position: relative; height: 260px; }
+
+    /* GRID 2 COL */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+    @media(max-width:860px){ .grid2 { grid-template-columns: 1fr; } }
+
+    /* TABLE */
+    .tbl-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+    .tbl-hdr h2 { font-size: 0.9rem; font-weight: 700; color: var(--v1); }
+    .srch { border: 1.5px solid var(--borde); border-radius: 8px; padding: 6px 13px; font-size: 0.83rem; background: var(--v6); outline: none; width: 200px; }
+    .srch:focus { border-color: var(--v3); }
+    .twrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead tr { background: var(--v2); }
+    thead th { color: var(--blanco); font-weight: 700; padding: 10px 14px; text-align: left; font-size: 0.74rem; text-transform: uppercase; letter-spacing: .6px; cursor: pointer; user-select: none; }
+    thead th:hover { background: var(--v1); }
+    tbody tr { border-bottom: 1px solid var(--borde); transition: background .14s; }
+    tbody tr:nth-child(even) { background: var(--v6); }
+    tbody tr:hover { background: var(--v5); }
+    tbody td { padding: 8px 14px; }
+    .td-f { font-weight: 700; color: var(--v1); }
+    .td-t { font-family: 'Courier New', monospace; font-weight: 700; }
+    .pag { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: #757575; }
+    .pbtns { display: flex; gap: 5px; }
+    .pb { padding: 4px 11px; border: 1.5px solid var(--borde); border-radius: 6px; background: var(--blanco); cursor: pointer; font-size: 0.78rem; font-weight: 700; color: var(--v2); transition: all .16s; }
+    .pb:hover, .pb.active { background: var(--v2); color: var(--blanco); border-color: var(--v2); }
+    .pb:disabled { opacity: .35; cursor: not-allowed; }
+
+    footer { text-align: center; padding: 18px; font-size: 0.73rem; color: #9E9E9E; }
+    footer a { color: var(--v3); text-decoration: none; }
+
+    /* Selector año comparativo */
+    .comp-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+    .comp-controls label { font-size: 0.75rem; font-weight: 700; color: var(--v1); text-transform: uppercase; }
+    .comp-controls select { border: 1.5px solid var(--borde); border-radius: 8px; padding: 5px 10px; font-size: 0.83rem; background: var(--v6); outline: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="https://grupohada.com/wp-content/uploads/2024/04/logo_color-1024x629.png" alt="Grupo Hada" onerror="this.style.display='none'">
+  <div class="hdr-title">
+    <h1>TRM USD / COP</h1>
+    <p>Tasa Representativa del Mercado — Banco de la República</p>
+  </div>
+  <div class="hdr-right">Última actualización<span id="ultima-fecha">—</span></div>
+</header>
+
+<main>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('general',this)">Resumen General</button>
+    <button class="tab" onclick="showTab('mensual',this)">Comparativo Mensual</button>
+    <button class="tab" onclick="showTab('trimestral',this)">Comparativo Trimestral</button>
+    <button class="tab" onclick="showTab('semestral',this)">Comparativo Semestral</button>
+    <button class="tab" onclick="showTab('detalle',this)">Detalle de Registros</button>
+  </div>
+
+  <!-- ═══ PANEL: GENERAL ═══ -->
+  <div class="panel active" id="tab-general">
+    <div class="kpi-grid">
+      <div class="kpi"><div class="lbl">TRM Hoy</div><div class="val" id="kpi-hoy">—</div><div class="sub">COP por 1 USD</div></div>
+      <div class="kpi"><div class="lbl">Variación vs Ayer</div><div class="val" id="kpi-var">—</div><div id="kpi-badge" class="badge flat">—</div></div>
+      <div class="kpi"><div class="lbl">Máximo del período</div><div class="val" id="kpi-max">—</div><div class="sub" id="kpi-max-f">—</div></div>
+      <div class="kpi"><div class="lbl">Mínimo del período</div><div class="val" id="kpi-min">—</div><div class="sub" id="kpi-min-f">—</div></div>
+      <div class="kpi"><div class="lbl">Promedio del período</div><div class="val" id="kpi-prom">—</div><div class="sub">Media aritmética</div></div>
+      <div class="kpi"><div class="lbl">Total registros</div><div class="val" id="kpi-tot">—</div><div class="sub">Días con dato</div></div>
+    </div>
+
+    <div class="fbar">
+      <div class="fbar-top">
+        <div class="fg"><label>Desde</label><input type="date" id="f-desde"></div>
+        <div class="fg"><label>Hasta</label><input type="date" id="f-hasta"></div>
+        <div class="fg"><label>TRM mín</label><input type="number" id="f-min" placeholder="Ej: 3500" style="width:120px"></div>
+        <div class="fg"><label>TRM máx</label><input type="number" id="f-max" placeholder="Ej: 5000" style="width:120px"></div>
+        <button class="btn btn-p" onclick="applyFilters()">Aplicar</button>
+        <button class="btn btn-o" onclick="resetFilters()">Limpiar</button>
+      </div>
+      <div class="qbtns">
+        <button class="qb" onclick="setQ(7,this)">7 días</button>
+        <button class="qb" onclick="setQ(30,this)">30 días</button>
+        <button class="qb" onclick="setQ(90,this)">90 días</button>
+        <button class="qb" onclick="setQ(180,this)">6 meses</button>
+        <button class="qb" onclick="setQ(365,this)">1 año</button>
+        <button class="qb active" onclick="setQ(0,this)">Todo</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Evolución TRM (USD/COP)</h2>
+      <div class="chart-wrap"><canvas id="chart-evol"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: MENSUAL ═══ -->
+  <div class="panel" id="tab-mensual">
+    <div class="comp-controls">
+      <label>Años a comparar:</label>
+      <select id="sel-anos-mes" multiple size="4" style="height:auto"></select>
+      <button class="btn btn-p" onclick="renderMensual()">Actualizar</button>
+      <span style="font-size:0.72rem;color:#757575">(Ctrl+clic para seleccionar varios)</span>
+    </div>
+    <div class="card">
+      <h2>Promedio mensual TRM — comparativo por año</h2>
+      <div class="chart-wrap"><canvas id="chart-mes"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Máximo y Mínimo mensual</h2>
+      <div class="chart-wrap"><canvas id="chart-mes-rango"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: TRIMESTRAL ═══ -->
+  <div class="panel" id="tab-trimestral">
+    <div class="comp-controls">
+      <label>Años a comparar:</label>
+      <select id="sel-anos-tri" multiple size="4" style="height:auto"></select>
+      <button class="btn btn-p" onclick="renderTrimestral()">Actualizar</button>
+      <span style="font-size:0.72rem;color:#757575">(Ctrl+clic para seleccionar varios)</span>
+    </div>
+    <div class="card">
+      <h2>Promedio trimestral TRM — comparativo por año</h2>
+      <div class="chart-wrap"><canvas id="chart-tri"></canvas></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h2>Variación trimestral (%)</h2>
+        <div class="chart-wrap-sm"><canvas id="chart-tri-var"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Resumen trimestral</h2>
+        <div id="tri-tabla" style="overflow-x:auto;font-size:0.82rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: SEMESTRAL ═══ -->
+  <div class="panel" id="tab-semestral">
+    <div class="comp-controls">
+      <label>Años a comparar:</label>
+      <select id="sel-anos-sem" multiple size="4" style="height:auto"></select>
+      <button class="btn btn-p" onclick="renderSemestral()">Actualizar</button>
+      <span style="font-size:0.72rem;color:#757575">(Ctrl+clic para seleccionar varios)</span>
+    </div>
+    <div class="card">
+      <h2>Promedio semestral TRM — comparativo por año</h2>
+      <div class="chart-wrap"><canvas id="chart-sem"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Variación semestral (%)</h2>
+      <div class="chart-wrap-sm"><canvas id="chart-sem-var"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: DETALLE ═══ -->
+  <div class="panel" id="tab-detalle">
+    <div class="card">
+      <div class="tbl-hdr">
+        <h2>Detalle de registros</h2>
+        <input class="srch" id="srch" type="text" placeholder="Buscar fecha..." oninput="renderTable()">
+      </div>
+      <div class="twrap">
+        <table>
+          <thead><tr>
+            <th onclick="sortBy('fecha')">Fecha ↕</th>
+            <th onclick="sortBy('trm')">TRM (COP/USD) ↕</th>
+            <th>Variación</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="pag">
+        <span id="pag-info">—</span>
+        <div class="pbtns">
+          <button class="pb" id="btn-prev" onclick="changePage(-1)">&#8592;</button>
+          <span id="btn-pages"></span>
+          <button class="pb" id="btn-next" onclick="changePage(1)">&#8594;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Datos: <a href="https://www.datos.gov.co/resource/ceyp-9c7c.json" target="_blank">Banco de la República — Datos Abiertos Colombia</a> &nbsp;|&nbsp; Grupo Hada &copy; <span id="yr"></span>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════
+//  GLOBALS
+// ══════════════════════════════════════════════
+let ALL = [], FILT = [];
+let sortCol = 'fecha', sortAsc = false, curPage = 1;
+const PG = 20;
+const CHARTS = {};
+
+const VERDE_PALETTE = [
+  '#1B5E20','#2E7D32','#388E3C','#43A047','#66BB6A',
+  '#81C784','#A5D6A7','#4CAF50','#00695C','#004D40'
+];
+
+// ══════════════════════════════════════════════
+//  DATA LOAD
+// ══════════════════════════════════════════════
+async function loadData() {
+  try {
+    const r = await fetch('trm_data.json');
+    if (!r.ok) throw new Error('no file');
+    ALL = await r.json();
+  } catch {
+    try {
+      const r = await fetch('https://www.datos.gov.co/resource/ceyp-9c7c.json?$where=vigenciadesde%20%3E=%20%272020-01-01T00:00:00.000%27&$order=vigenciadesde%20ASC&$limit=10000');
+      const raw = await r.json();
+      const map = {};
+      const today = new Date().toISOString().slice(0,10);
+      raw.forEach(rec => {
+        const trm = parseFloat(rec.valor);
+        let d = new Date(rec.vigenciadesde.slice(0,10));
+        const hasta = new Date(rec.vigenciahasta.slice(0,10));
+        while (d <= hasta) {
+          const k = d.toISOString().slice(0,10);
+          if (k <= today) map[k] = trm;
+          d.setDate(d.getDate()+1);
+        }
+      });
+      ALL = Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0])).map(([f,t])=>({fecha:f,trm:Math.round(t*100)/100}));
+    } catch {
+      document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#c62828">Error cargando datos.</div>';
+      return;
+    }
+  }
+  ALL.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  FILT = [...ALL];
+  initSelectors();
+  render();
+}
+
+// ══════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════
+function showTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if (id==='mensual')    renderMensual();
+  if (id==='trimestral') renderTrimestral();
+  if (id==='semestral')  renderSemestral();
+  if (id==='detalle')    renderTable();
+}
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function fmt(v) { return new Intl.NumberFormat('es-CO',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v); }
+
+function getYears() { return [...new Set(ALL.map(d=>d.fecha.slice(0,4)))].sort(); }
+
+function groupBy(data, keyFn) {
+  const m = {};
+  data.forEach(d => { const k=keyFn(d); if(!m[k]) m[k]=[]; m[k].push(d.trm); });
+  return m;
+}
+
+function avg(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function max(arr) { return Math.max(...arr); }
+function min(arr) { return Math.min(...arr); }
+
+function destroyChart(id) { if(CHARTS[id]) { CHARTS[id].destroy(); delete CHARTS[id]; } }
+
+// ══════════════════════════════════════════════
+//  INIT SELECTORS
+// ══════════════════════════════════════════════
+function initSelectors() {
+  const years = getYears();
+  ['sel-anos-mes','sel-anos-tri','sel-anos-sem'].forEach(sid => {
+    const sel = document.getElementById(sid);
+    sel.innerHTML = years.map(y=>`<option value="${y}" selected>${y}</option>`).join('');
+  });
+}
+
+function getSelectedYears(sid) {
+  return [...document.getElementById(sid).selectedOptions].map(o=>o.value);
+}
+
+// ══════════════════════════════════════════════
+//  RENDER — GENERAL
+// ══════════════════════════════════════════════
+function render() {
+  updateKPIs(FILT);
+  renderEvol(FILT);
+  document.getElementById('ultima-fecha').textContent = ALL.length ? ALL[ALL.length-1].fecha : '—';
+}
+
+function updateKPIs(data) {
+  if (!data.length) return;
+  const last = data[data.length-1];
+  const prev = data.length>1 ? data[data.length-2] : null;
+  const vals = data.map(d=>d.trm);
+  document.getElementById('kpi-hoy').textContent = fmt(last.trm);
+  document.getElementById('kpi-tot').textContent = data.length;
+  if (prev) {
+    const d = last.trm - prev.trm;
+    const p = ((d/prev.trm)*100).toFixed(2);
+    document.getElementById('kpi-var').textContent = (d>=0?'+':'')+fmt(d);
+    const b = document.getElementById('kpi-badge');
+    b.textContent = (d>0?'▲ +':'▼ ')+Math.abs(p)+'%';
+    b.className = 'badge '+(d>0?'up':d<0?'down':'flat');
+  }
+  const mx=max(vals), mn=min(vals);
+  document.getElementById('kpi-max').textContent = fmt(mx);
+  document.getElementById('kpi-max-f').textContent = data.find(d=>d.trm===mx)?.fecha||'';
+  document.getElementById('kpi-min').textContent = fmt(mn);
+  document.getElementById('kpi-min-f').textContent = data.find(d=>d.trm===mn)?.fecha||'';
+  document.getElementById('kpi-prom').textContent = fmt(avg(vals));
+}
+
+function renderEvol(data) {
+  destroyChart('evol');
+  const ctx = document.getElementById('chart-evol').getContext('2d');
+  CHARTS['evol'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map(d=>d.fecha),
+      datasets: [{
+        label: 'TRM', data: data.map(d=>d.trm),
+        borderColor: '#2E7D32', backgroundColor: 'rgba(102,187,106,.1)',
+        borderWidth: 1.8, pointRadius: data.length>200?0:2,
+        pointHoverRadius: 5, tension: 0.3, fill: true
+      }]
+    },
+    options: chartOpts(v=>'$'+fmt(v)+' COP')
+  });
+}
+
+function chartOpts(yFmt, legend=false) {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{display:legend, labels:{color:'#424242',font:{size:11}}},
+      tooltip:{
+        backgroundColor:'#1B5E20', titleColor:'#A5D6A7', bodyColor:'#fff',
+        callbacks:{label: ctx=>` ${ctx.dataset.label}: $${fmt(ctx.raw)}`}
+      }
+    },
+    scales:{
+      x:{ticks:{maxTicksLimit:12,color:'#616161',font:{size:10}},grid:{color:'#E8F5E9'}},
+      y:{ticks:{color:'#616161',font:{size:10},callback:yFmt},grid:{color:'#E8F5E9'}}
+    }
+  };
+}
+
+// ══════════════════════════════════════════════
+//  RENDER — MENSUAL
+// ══════════════════════════════════════════════
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+function renderMensual() {
+  const years = getSelectedYears('sel-anos-mes');
+  if (!years.length) return;
+
+  // Promedios por año/mes
+  destroyChart('mes'); destroyChart('mes-rango');
+
+  const datasets = years.map((yr,i) => {
+    const data = MESES.map((_,m) => {
+      const vals = ALL.filter(d=>d.fecha.startsWith(yr+'-'+(String(m+1).padStart(2,'0')))).map(d=>d.trm);
+      return vals.length ? Math.round(avg(vals)*100)/100 : null;
+    });
+    return { label: yr, data, borderColor: VERDE_PALETTE[i%10], backgroundColor: VERDE_PALETTE[i%10]+'33',
+             borderWidth: 2, pointRadius: 4, tension: 0.3, fill: false };
+  });
+
+  CHARTS['mes'] = new Chart(document.getElementById('chart-mes').getContext('2d'), {
+    type: 'line',
+    data: { labels: MESES, datasets },
+    options: { ...chartOpts(v=>'$'+fmt(v)), plugins: { ...chartOpts().plugins, legend:{display:true, labels:{color:'#424242',font:{size:11}}} } }
+  });
+
+  // Max/Min por mes (último año seleccionado)
+  const yr = years[years.length-1];
+  const maxData = MESES.map((_,m) => {
+    const vals = ALL.filter(d=>d.fecha.startsWith(yr+'-'+(String(m+1).padStart(2,'0')))).map(d=>d.trm);
+    return vals.length ? Math.round(max(vals)*100)/100 : null;
+  });
+  const minData = MESES.map((_,m) => {
+    const vals = ALL.filter(d=>d.fecha.startsWith(yr+'-'+(String(m+1).padStart(2,'0')))).map(d=>d.trm);
+    return vals.length ? Math.round(min(vals)*100)/100 : null;
+  });
+
+  CHARTS['mes-rango'] = new Chart(document.getElementById('chart-mes-rango').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: MESES,
+      datasets: [
+        { label: `Máx ${yr}`, data: maxData, backgroundColor: '#43A047cc', borderColor:'#2E7D32', borderWidth:1 },
+        { label: `Mín ${yr}`, data: minData, backgroundColor: '#A5D6A7cc', borderColor:'#66BB6A', borderWidth:1 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:'#424242',font:{size:11}}},
+        tooltip:{backgroundColor:'#1B5E20',titleColor:'#A5D6A7',bodyColor:'#fff',
+          callbacks:{label:ctx=>` ${ctx.dataset.label}: $${fmt(ctx.raw)}`}}},
+      scales:{
+        x:{ticks:{color:'#616161',font:{size:11}},grid:{color:'#E8F5E9'}},
+        y:{ticks:{color:'#616161',font:{size:10},callback:v=>'$'+fmt(v)},grid:{color:'#E8F5E9'}}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+//  RENDER — TRIMESTRAL
+// ══════════════════════════════════════════════
+const TRIMESTRES = ['T1 (Ene-Mar)','T2 (Abr-Jun)','T3 (Jul-Sep)','T4 (Oct-Dic)'];
+const TRI_MESES = [[1,2,3],[4,5,6],[7,8,9],[10,11,12]];
+
+function getTrimData(yr, ti) {
+  return ALL.filter(d => {
+    if (!d.fecha.startsWith(yr)) return false;
+    const m = parseInt(d.fecha.slice(5,7));
+    return TRI_MESES[ti].includes(m);
+  }).map(d=>d.trm);
+}
+
+function renderTrimestral() {
+  const years = getSelectedYears('sel-anos-tri');
+  if (!years.length) return;
+  destroyChart('tri'); destroyChart('tri-var');
+
+  const datasets = years.map((yr,i) => {
+    const data = TRI_MESES.map((_,ti) => {
+      const vals = getTrimData(yr, ti);
+      return vals.length ? Math.round(avg(vals)*100)/100 : null;
+    });
+    return { label: yr, data, borderColor: VERDE_PALETTE[i%10], backgroundColor: VERDE_PALETTE[i%10]+'33',
+             borderWidth: 2, pointRadius: 5, tension: 0.3, fill: false };
+  });
+
+  CHARTS['tri'] = new Chart(document.getElementById('chart-tri').getContext('2d'), {
+    type: 'line',
+    data: { labels: TRIMESTRES, datasets },
+    options: { responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:true,labels:{color:'#424242',font:{size:11}}},
+        tooltip:{backgroundColor:'#1B5E20',titleColor:'#A5D6A7',bodyColor:'#fff',
+          callbacks:{label:ctx=>` ${ctx.dataset.label}: $${fmt(ctx.raw)}`}}},
+      scales:{
+        x:{ticks:{color:'#616161',font:{size:11}},grid:{color:'#E8F5E9'}},
+        y:{ticks:{color:'#616161',font:{size:10},callback:v=>'$'+fmt(v)},grid:{color:'#E8F5E9'}}
+      }
+    }
+  });
+
+  // Variación % trimestral por año
+  const varDatasets = years.map((yr,i) => {
+    const avgs = TRI_MESES.map((_,ti)=>{ const v=getTrimData(yr,ti); return v.length?avg(v):null; });
+    const vars = avgs.map((a,j)=> j===0||avgs[j-1]===null||a===null ? null : Math.round(((a-avgs[j-1])/avgs[j-1])*10000)/100);
+    return { label: yr, data: vars, backgroundColor: VERDE_PALETTE[i%10]+'bb', borderColor: VERDE_PALETTE[i%10], borderWidth:1 };
+  });
+
+  CHARTS['tri-var'] = new Chart(document.getElementById('chart-tri-var').getContext('2d'), {
+    type: 'bar',
+    data: { labels: TRIMESTRES, datasets: varDatasets },
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:'#424242',font:{size:11}}},
+        tooltip:{backgroundColor:'#1B5E20',titleColor:'#A5D6A7',bodyColor:'#fff',
+          callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw!==null?(ctx.raw>=0?'+':'')+ctx.raw+'%':'—'}`}}},
+      scales:{
+        x:{ticks:{color:'#616161',font:{size:10}},grid:{color:'#E8F5E9'}},
+        y:{ticks:{color:'#616161',font:{size:10},callback:v=>v+'%'},grid:{color:'#E8F5E9'}}
+      }
+    }
+  });
+
+  // Tabla resumen
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem">';
+  html += '<thead><tr><th style="background:#2E7D32;color:#fff;padding:7px 10px">Año</th>';
+  TRIMESTRES.forEach(t => html += `<th style="background:#2E7D32;color:#fff;padding:7px 10px">${t}</th>`);
+  html += '</tr></thead><tbody>';
+  years.forEach((yr,ri) => {
+    html += `<tr style="background:${ri%2===0?'#E8F5E9':'#fff'}">`;
+    html += `<td style="padding:6px 10px;font-weight:700;color:#1B5E20">${yr}</td>`;
+    TRI_MESES.forEach((_,ti) => {
+      const vals = getTrimData(yr,ti);
+      html += `<td style="padding:6px 10px;text-align:center">${vals.length?'$'+fmt(avg(vals)):'—'}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('tri-tabla').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════
+//  RENDER — SEMESTRAL
+// ══════════════════════════════════════════════
+const SEMESTRES = ['S1 (Ene-Jun)','S2 (Jul-Dic)'];
+const SEM_MESES = [[1,2,3,4,5,6],[7,8,9,10,11,12]];
+
+function getSemData(yr, si) {
+  return ALL.filter(d => {
+    if (!d.fecha.startsWith(yr)) return false;
+    const m = parseInt(d.fecha.slice(5,7));
+    return SEM_MESES[si].includes(m);
+  }).map(d=>d.trm);
+}
+
+function renderSemestral() {
+  const years = getSelectedYears('sel-anos-sem');
+  if (!years.length) return;
+  destroyChart('sem'); destroyChart('sem-var');
+
+  const datasets = years.map((yr,i) => {
+    const data = SEM_MESES.map((_,si) => {
+      const vals = getSemData(yr,si);
+      return vals.length ? Math.round(avg(vals)*100)/100 : null;
+    });
+    return { label: yr, data, backgroundColor: VERDE_PALETTE[i%10]+'cc', borderColor: VERDE_PALETTE[i%10], borderWidth:1 };
+  });
+
+  CHARTS['sem'] = new Chart(document.getElementById('chart-sem').getContext('2d'), {
+    type: 'bar',
+    data: { labels: SEMESTRES, datasets },
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:'#424242',font:{size:11}}},
+        tooltip:{backgroundColor:'#1B5E20',titleColor:'#A5D6A7',bodyColor:'#fff',
+          callbacks:{label:ctx=>` ${ctx.dataset.label}: $${fmt(ctx.raw)}`}}},
+      scales:{
+        x:{ticks:{color:'#616161',font:{size:11}},grid:{color:'#E8F5E9'}},
+        y:{ticks:{color:'#616161',font:{size:10},callback:v=>'$'+fmt(v)},grid:{color:'#E8F5E9'}}
+      }
+    }
+  });
+
+  // Variación % semestral
+  const varDs = years.map((yr,i) => {
+    const avgs = SEM_MESES.map((_,si)=>{ const v=getSemData(yr,si); return v.length?avg(v):null; });
+    const vars = avgs.map((a,j)=> j===0||avgs[j-1]===null||a===null ? null : Math.round(((a-avgs[j-1])/avgs[j-1])*10000)/100);
+    return { label: yr, data: vars, backgroundColor: VERDE_PALETTE[i%10]+'bb', borderColor: VERDE_PALETTE[i%10], borderWidth:1 };
+  });
+
+  CHARTS['sem-var'] = new Chart(document.getElementById('chart-sem-var').getContext('2d'), {
+    type: 'bar',
+    data: { labels: SEMESTRES, datasets: varDs },
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:'#424242',font:{size:11}}},
+        tooltip:{backgroundColor:'#1B5E20',titleColor:'#A5D6A7',bodyColor:'#fff',
+          callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw!==null?(ctx.raw>=0?'+':'')+ctx.raw+'%':'—'}`}}},
+      scales:{
+        x:{ticks:{color:'#616161',font:{size:11}},grid:{color:'#E8F5E9'}},
+        y:{ticks:{color:'#616161',font:{size:10},callback:v=>v+'%'},grid:{color:'#E8F5E9'}}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+//  FILTERS (General)
+// ══════════════════════════════════════════════
+function applyFilters() {
+  const desde = document.getElementById('f-desde').value;
+  const hasta = document.getElementById('f-hasta').value;
+  const mn = parseFloat(document.getElementById('f-min').value)||0;
+  const mx2 = parseFloat(document.getElementById('f-max').value)||Infinity;
+  FILT = ALL.filter(d=>{
+    if(desde && d.fecha<desde) return false;
+    if(hasta && d.fecha>hasta) return false;
+    if(d.trm<mn||d.trm>mx2) return false;
+    return true;
+  });
+  render();
+}
+
+function resetFilters() {
+  ['f-desde','f-hasta','f-min','f-max'].forEach(id=>document.getElementById(id).value='');
+  document.querySelectorAll('.qb').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.qb')[5].classList.add('active');
+  FILT=[...ALL]; render();
+}
+
+function setQ(days,btn) {
+  document.querySelectorAll('.qb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(days===0){ FILT=[...ALL]; }
+  else {
+    const cut = new Date(); cut.setDate(cut.getDate()-days);
+    const cs = cut.toISOString().slice(0,10);
+    FILT = ALL.filter(d=>d.fecha>=cs);
+  }
+  ['f-desde','f-hasta'].forEach(id=>document.getElementById(id).value='');
+  render();
+}
+
+// ══════════════════════════════════════════════
+//  TABLE
+// ══════════════════════════════════════════════
+function sortBy(col) { sortCol===col?sortAsc=!sortAsc:(sortCol=col,sortAsc=false); renderTable(); }
+function changePage(d) { curPage+=d; renderTable(); }
+function goPage(p)     { curPage=p;  renderTable(); }
+
+function renderTable() {
+  const srch = document.getElementById('srch').value.toLowerCase();
+  let disp = FILT.filter(d=>d.fecha.includes(srch));
+  disp.sort((a,b)=>{
+    const va=sortCol==='fecha'?a.fecha:a.trm, vb=sortCol==='fecha'?b.fecha:b.trm;
+    return sortAsc?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  const total=disp.length, totalPg=Math.max(1,Math.ceil(total/PG));
+  curPage=Math.min(curPage,totalPg);
+  const st=(curPage-1)*PG, pg=disp.slice(st,st+PG);
+  document.getElementById('tbody').innerHTML = pg.map(d=>{
+    const idx = ALL.findIndex(r=>r.fecha===d.fecha);
+    const prev = idx>0 ? ALL[idx-1] : null;
+    let varH = '<span class="badge flat">—</span>';
+    if(prev){ const df=d.trm-prev.trm, p=((df/prev.trm)*100).toFixed(2), cls=df>0?'up':df<0?'down':'flat';
+      varH=`<span class="badge ${cls}">${df>=0?'+':''}${fmt(df)} (${df>=0?'+':''}${p}%)</span>`; }
+    return `<tr><td class="td-f">${d.fecha}</td><td class="td-t">$ ${fmt(d.trm)}</td><td>${varH}</td></tr>`;
+  }).join('');
+  document.getElementById('pag-info').textContent=`${st+1}–${Math.min(st+PG,total)} de ${total}`;
+  let ph='';
+  for(let p=Math.max(1,curPage-2);p<=Math.min(totalPg,curPage+2);p++)
+    ph+=`<button class="pb ${p===curPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  document.getElementById('btn-pages').innerHTML=ph;
+  document.getElementById('btn-prev').disabled=curPage===1;
+  document.getElementById('btn-next').disabled=curPage===totalPg;
+}
+
+document.getElementById('yr').textContent = new Date().getFullYear();
+loadData();
+</script>
+</body>
+</html>
