@@ -1,0 +1,35 @@
+name: Actualizar TRM Diario
+
+on:
+  schedule:
+    - cron: '30 16 * * *'  # 11:30 AM Colombia (COT = UTC-5)
+  workflow_dispatch:        # permite ejecutar manualmente desde GitHub
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install requests
+
+      - name: Actualizar TRM
+        run: python execution/update_cloud.py
+
+      - name: Subir cambios
+        run: |
+          git config user.name "TRM Bot"
+          git config user.email "trm-bot@grupohada.com"
+          git add trm_data.json
+          git diff --cached --quiet || git commit -m "TRM actualizado $(date +'%Y-%m-%d')"
+          git push
