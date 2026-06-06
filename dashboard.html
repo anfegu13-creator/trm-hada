@@ -312,9 +312,9 @@
         <!-- COP → USD -->
         <div style="background:var(--v6);border:1.5px solid var(--borde);border-radius:12px;padding:18px 20px;">
           <div style="font-size:0.68rem;font-weight:700;color:var(--v2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">🇨🇴 Pesos Colombianos (COP)</div>
-          <input type="number" id="inp-cop" placeholder="0.00"
+          <input type="text" id="inp-cop" placeholder="0,00"
             style="width:100%;border:none;background:transparent;font-size:1.6rem;font-weight:800;color:var(--v1);outline:none;"
-            oninput="convertFromCOP()">
+            oninput="convertFromCOP()" onblur="fmtInput('inp-cop')">
           <div style="font-size:0.72rem;color:#9E9E9E;margin-top:4px;">Ingresa valor en COP</div>
         </div>
 
@@ -324,9 +324,9 @@
         <!-- USD → COP -->
         <div style="background:var(--v6);border:1.5px solid var(--borde);border-radius:12px;padding:18px 20px;">
           <div style="font-size:0.68rem;font-weight:700;color:var(--v2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">🇺🇸 Dólares (USD)</div>
-          <input type="number" id="inp-usd" placeholder="0.00"
+          <input type="text" id="inp-usd" placeholder="0.0000"
             style="width:100%;border:none;background:transparent;font-size:1.6rem;font-weight:800;color:var(--v1);outline:none;"
-            oninput="convertFromUSD()">
+            oninput="convertFromUSD()" onblur="fmtInput('inp-usd')">
           <div style="font-size:0.72rem;color:#9E9E9E;margin-top:4px;">Ingresa valor en USD</div>
         </div>
       </div>
@@ -816,6 +816,22 @@ loadData();
 // ══════════════════════════════════════════════
 //  CONVERSOR
 // ══════════════════════════════════════════════
+function parseInput(id) {
+  // Elimina separadores de miles y convierte coma decimal a punto
+  const raw = document.getElementById(id).value.replace(/\./g,'').replace(',','.');
+  return parseFloat(raw);
+}
+
+function fmtInput(id) {
+  const val = parseInput(id);
+  if (!isNaN(val) && val > 0) {
+    const decimals = id === 'inp-usd' ? 4 : 2;
+    document.getElementById(id).value = new Intl.NumberFormat('es-CO', {
+      minimumFractionDigits: decimals, maximumFractionDigits: decimals
+    }).format(val);
+  }
+}
+
 function getTRMConversor() {
   const tipo = document.getElementById('conv-tipo').value;
   if (!ALL.length) return null;
@@ -848,8 +864,8 @@ function calcConversor() {
   if (!trm) { display.textContent = '—'; return; }
   display.textContent = '$' + fmt(trm);
   // Recalcula el campo activo
-  const cop = parseFloat(document.getElementById('inp-cop').value);
-  const usd = parseFloat(document.getElementById('inp-usd').value);
+  const cop = parseInput('inp-cop');
+  const usd = parseInput('inp-usd');
   if (!isNaN(cop) && cop > 0) convertFromCOP();
   else if (!isNaN(usd) && usd > 0) convertFromUSD();
   else updateTablaComparativa(null, null);
@@ -859,10 +875,10 @@ function convertFromCOP() {
   const trm = getTRMConversor();
   if (!trm) return;
   document.getElementById('conv-trm-val').textContent = '$' + fmt(trm);
-  const cop = parseFloat(document.getElementById('inp-cop').value);
+  const cop = parseInput('inp-cop');
   if (isNaN(cop) || cop <= 0) { document.getElementById('conv-resultado').style.display='none'; return; }
   const usd = cop / trm;
-  document.getElementById('inp-usd').value = usd.toFixed(4);
+  document.getElementById('inp-usd').value = new Intl.NumberFormat('es-CO',{minimumFractionDigits:4,maximumFractionDigits:4}).format(usd);
   showResultado(cop, usd, trm);
   updateTablaComparativa(cop, 'cop');
 }
@@ -871,10 +887,10 @@ function convertFromUSD() {
   const trm = getTRMConversor();
   if (!trm) return;
   document.getElementById('conv-trm-val').textContent = '$' + fmt(trm);
-  const usd = parseFloat(document.getElementById('inp-usd').value);
+  const usd = parseInput('inp-usd');
   if (isNaN(usd) || usd <= 0) { document.getElementById('conv-resultado').style.display='none'; return; }
   const cop = usd * trm;
-  document.getElementById('inp-cop').value = cop.toFixed(2);
+  document.getElementById('inp-cop').value = new Intl.NumberFormat('es-CO',{minimumFractionDigits:2,maximumFractionDigits:2}).format(cop);
   showResultado(cop, usd, trm);
   updateTablaComparativa(usd, 'usd');
 }
