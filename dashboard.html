@@ -957,18 +957,26 @@ function showResultado(cop, usd, trm) {
 
 function updateTablaComparativa(valor, dir) {
   if (!ALL.length) return;
-  const vals = ALL.map(d => d.trm);
+
+  // Aplicar el mismo rango si está activo el promedio con fechas
+  const tipo   = document.getElementById('conv-tipo').value;
+  const desde  = tipo === 'promedio' ? document.getElementById('conv-prom-desde').value : '';
+  const hasta  = tipo === 'promedio' ? document.getElementById('conv-prom-hasta').value : '';
+  const subset = (desde || hasta) ? ALL.filter(d => (!desde || d.fecha >= desde) && (!hasta || d.fecha <= hasta)) : ALL;
+  const vals   = subset.length ? subset.map(d => d.trm) : ALL.map(d => d.trm);
+
   const trmHoy    = ALL[ALL.length-1].trm;
   const trmProm   = Math.round(avg(vals)*100)/100;
   const trmMax    = max(vals);
   const trmMin    = min(vals);
   const trmManual = parseFloat(document.getElementById('conv-trm-manual').value) || null;
+  const rangoLabel = (desde || hasta) ? ` (${desde||'inicio'} → ${hasta||'hoy'})` : ' (histórico)';
 
   const trms = [
     { label: 'TRM Hoy', val: trmHoy },
-    { label: 'Promedio histórico', val: trmProm },
-    { label: 'Máximo histórico', val: trmMax },
-    { label: 'Mínimo histórico', val: trmMin },
+    { label: 'Promedio' + rangoLabel, val: trmProm },
+    { label: 'Máximo' + rangoLabel, val: trmMax },
+    { label: 'Mínimo' + rangoLabel, val: trmMin },
   ];
   if (trmManual) trms.push({ label: 'TRM Manual', val: trmManual });
 
