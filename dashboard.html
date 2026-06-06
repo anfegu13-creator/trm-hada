@@ -314,7 +314,7 @@
           <div style="font-size:0.68rem;font-weight:700;color:var(--v2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">🇨🇴 Pesos Colombianos (COP)</div>
           <input type="text" id="inp-cop" placeholder="0,00"
             style="width:100%;border:none;background:transparent;font-size:1.6rem;font-weight:800;color:var(--v1);outline:none;"
-            oninput="convertFromCOP()" onblur="fmtInput('inp-cop')">
+            oninput="fmtWhileTyping('inp-cop'); convertFromCOP()">
           <div style="font-size:0.72rem;color:#9E9E9E;margin-top:4px;">Ingresa valor en COP</div>
         </div>
 
@@ -326,7 +326,7 @@
           <div style="font-size:0.68rem;font-weight:700;color:var(--v2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">🇺🇸 Dólares (USD)</div>
           <input type="text" id="inp-usd" placeholder="0.0000"
             style="width:100%;border:none;background:transparent;font-size:1.6rem;font-weight:800;color:var(--v1);outline:none;"
-            oninput="convertFromUSD()" onblur="fmtInput('inp-usd')">
+            oninput="fmtWhileTyping('inp-usd'); convertFromUSD()">
           <div style="font-size:0.72rem;color:#9E9E9E;margin-top:4px;">Ingresa valor en USD</div>
         </div>
       </div>
@@ -817,7 +817,6 @@ loadData();
 //  CONVERSOR
 // ══════════════════════════════════════════════
 function parseInput(id) {
-  // Elimina separadores de miles y convierte coma decimal a punto
   const raw = document.getElementById(id).value.replace(/\./g,'').replace(',','.');
   return parseFloat(raw);
 }
@@ -830,6 +829,19 @@ function fmtInput(id) {
       minimumFractionDigits: decimals, maximumFractionDigits: decimals
     }).format(val);
   }
+}
+
+function fmtWhileTyping(id) {
+  const el = document.getElementById(id);
+  // Extraer solo dígitos y una posible coma decimal
+  let raw = el.value.replace(/\./g, '');           // quitar separadores de miles
+  const partes = raw.split(',');
+  const entero = partes[0].replace(/\D/g, '');     // solo dígitos en parte entera
+  const decimal = partes.length > 1 ? ',' + partes[1].replace(/\D/g, '') : '';
+  if (!entero) { el.value = ''; return; }
+  // Aplicar separador de miles solo a la parte entera
+  const formatted = parseInt(entero, 10).toLocaleString('es-CO') + decimal;
+  el.value = formatted;
 }
 
 function getTRMConversor() {
