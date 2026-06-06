@@ -899,19 +899,15 @@ function onTipoChange() {
   else calcConversor();
 }
 
+let intercambiado = false;
 function intercambiar() {
-  const grid = document.getElementById('conv-grid');
   const panelCOP = document.getElementById('panel-cop');
   const panelUSD = document.getElementById('panel-usd');
-  const btn     = document.getElementById('btn-intercambiar');
-  // Intercambiar posición en el DOM
-  if (panelCOP.previousElementSibling === null || panelCOP.compareDocumentPosition(panelUSD) & 4) {
-    grid.insertBefore(panelUSD, panelCOP);
-  } else {
-    grid.insertBefore(panelCOP, panelUSD);
-  }
-  // Rotar flecha visualmente
-  btn.style.transform = btn.style.transform === 'rotate(180deg)' ? '' : 'rotate(180deg)';
+  const btn      = document.getElementById('btn-intercambiar');
+  intercambiado = !intercambiado;
+  panelCOP.style.order = intercambiado ? '3' : '1';
+  panelUSD.style.order = intercambiado ? '1' : '3';
+  btn.style.transform  = intercambiado ? 'rotate(180deg)' : '';
 }
 
 function borrarConversor() {
