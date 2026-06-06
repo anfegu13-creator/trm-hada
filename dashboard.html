@@ -388,14 +388,18 @@ async function loadData() {
       const r = await fetch('https://www.datos.gov.co/resource/ceyp-9c7c.json?$where=vigenciadesde%20%3E=%20%272020-01-01T00:00:00.000%27&$order=vigenciadesde%20ASC&$limit=10000');
       const raw = await r.json();
       const map = {};
-      const today = new Date().toISOString().slice(0,10);
+      // Solo hasta ayer — el dato de hoy se publica al día siguiente a las 11:30 AM
+      const ayer = new Date(); ayer.setDate(ayer.getDate()-1);
+      const ayerStr = ayer.toISOString().slice(0,10);
+      // Procesar de más reciente a más antiguo para que el registro más nuevo tenga prioridad
+      raw.sort((a,b) => b.vigenciadesde.localeCompare(a.vigenciadesde));
       raw.forEach(rec => {
         const trm = parseFloat(rec.valor);
         let d = new Date(rec.vigenciadesde.slice(0,10));
         const hasta = new Date(rec.vigenciahasta.slice(0,10));
         while (d <= hasta) {
           const k = d.toISOString().slice(0,10);
-          if (k <= today) map[k] = trm;
+          if (k <= ayerStr && !(k in map)) map[k] = trm;
           d.setDate(d.getDate()+1);
         }
       });
