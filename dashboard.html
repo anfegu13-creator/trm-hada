@@ -338,7 +338,12 @@
         </div>
 
         <!-- Icono central -->
-        <div style="text-align:center;font-size:1.4rem;color:var(--v3);font-weight:700">⇄</div>
+        <div style="text-align:center;">
+          <button onclick="intercambiar()" title="Intercambiar valores"
+            style="background:var(--blanco);border:2px solid var(--v3);border-radius:50%;width:42px;height:42px;font-size:1.2rem;cursor:pointer;color:var(--v3);transition:all .2s;"
+            onmouseover="this.style.background='var(--v2)';this.style.color='white'"
+            onmouseout="this.style.background='var(--blanco)';this.style.color='var(--v3)'">⇄</button>
+        </div>
 
         <!-- USD → COP -->
         <div style="background:var(--v6);border:1.5px solid var(--borde);border-radius:12px;padding:18px 20px;">
@@ -892,6 +897,14 @@ function onTipoChange() {
   document.getElementById('conv-promedio-wrap').style.display = tipo === 'promedio' ? 'flex'  : 'none';
   if (tipo === 'promedio') setPromDefecto();
   else calcConversor();
+}
+
+function intercambiar() {
+  const copVal = document.getElementById('inp-cop').value;
+  const usdVal = document.getElementById('inp-usd').value;
+  document.getElementById('inp-cop').value = usdVal;
+  document.getElementById('inp-usd').value = copVal;
+  convertFromCOP();
 }
 
 function borrarConversor() {
