@@ -151,7 +151,7 @@
   <!-- ═══ PANEL: GENERAL ═══ -->
   <div class="panel active" id="tab-general">
     <div class="kpi-grid">
-      <div class="kpi"><div class="lbl">TRM Hoy</div><div class="val" id="kpi-hoy">—</div><div class="sub">COP por 1 USD</div></div>
+      <div class="kpi"><div class="lbl">Último dato disponible</div><div class="val" id="kpi-hoy">—</div><div class="sub" id="kpi-hoy-fecha">COP por 1 USD</div></div>
       <div class="kpi"><div class="lbl">Variación vs Ayer</div><div class="val" id="kpi-var">—</div><div id="kpi-badge" class="badge flat">—</div></div>
       <div class="kpi"><div class="lbl">Máximo del período</div><div class="val" id="kpi-max">—</div><div class="sub" id="kpi-max-f">—</div></div>
       <div class="kpi"><div class="lbl">Mínimo del período</div><div class="val" id="kpi-min">—</div><div class="sub" id="kpi-min-f">—</div></div>
@@ -476,6 +476,7 @@ function updateKPIs(data) {
   const prev = data.length>1 ? data[data.length-2] : null;
   const vals = data.map(d=>d.trm);
   document.getElementById('kpi-hoy').textContent = fmt(last.trm);
+  document.getElementById('kpi-hoy-fecha').textContent = last.fecha + ' · COP por 1 USD';
   document.getElementById('kpi-tot').textContent = data.length;
   if (prev) {
     const d = last.trm - prev.trm;
