@@ -299,6 +299,20 @@
           <input type="date" id="conv-fecha" style="max-width:200px" oninput="calcConversor()">
         </div>
 
+        <div id="conv-promedio-wrap" style="display:none;display:none;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="fg">
+            <label>Desde</label>
+            <input type="date" id="conv-prom-desde" style="max-width:180px" oninput="calcConversor()">
+          </div>
+          <div class="fg">
+            <label>Hasta</label>
+            <input type="date" id="conv-prom-hasta" style="max-width:180px" oninput="calcConversor()">
+          </div>
+          <div style="padding-bottom:1px;">
+            <button class="btn btn-o" onclick="setPromDefecto()">Todo el período</button>
+          </div>
+        </div>
+
         <div id="conv-trm-display" style="margin-top:12px;padding:12px 18px;background:var(--v6);border-radius:10px;border:1.5px solid var(--borde);display:flex;align-items:center;gap:14px;">
           <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.7px;color:var(--v2);font-weight:700;">TRM aplicada</span>
           <span id="conv-trm-val" style="font-size:1.5rem;font-weight:800;color:var(--v1)">—</span>
@@ -853,8 +867,11 @@ function getTRMConversor() {
     const v = parseFloat(document.getElementById('conv-trm-manual').value);
     return isNaN(v) || v <= 0 ? null : v;
   } else if (tipo === 'promedio') {
-    const vals = ALL.map(d => d.trm);
-    return Math.round(avg(vals) * 100) / 100;
+    const desde = document.getElementById('conv-prom-desde').value;
+    const hasta = document.getElementById('conv-prom-hasta').value;
+    const filtered = ALL.filter(d => (!desde || d.fecha >= desde) && (!hasta || d.fecha <= hasta));
+    if (!filtered.length) return null;
+    return Math.round(avg(filtered.map(d => d.trm)) * 100) / 100;
   } else if (tipo === 'fecha') {
     const f = document.getElementById('conv-fecha').value;
     const rec = ALL.find(d => d.fecha === f);
@@ -865,8 +882,17 @@ function getTRMConversor() {
 
 function onTipoChange() {
   const tipo = document.getElementById('conv-tipo').value;
-  document.getElementById('conv-manual-wrap').style.display = tipo === 'manual' ? 'block' : 'none';
-  document.getElementById('conv-fecha-wrap').style.display  = tipo === 'fecha'  ? 'block' : 'none';
+  document.getElementById('conv-manual-wrap').style.display   = tipo === 'manual'   ? 'block' : 'none';
+  document.getElementById('conv-fecha-wrap').style.display    = tipo === 'fecha'    ? 'block' : 'none';
+  document.getElementById('conv-promedio-wrap').style.display = tipo === 'promedio' ? 'flex'  : 'none';
+  if (tipo === 'promedio') setPromDefecto();
+  else calcConversor();
+}
+
+function setPromDefecto() {
+  if (!ALL.length) return;
+  document.getElementById('conv-prom-desde').value = ALL[0].fecha;
+  document.getElementById('conv-prom-hasta').value = ALL[ALL.length-1].fecha;
   calcConversor();
 }
 
