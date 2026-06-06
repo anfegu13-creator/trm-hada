@@ -320,6 +320,11 @@
         </div>
       </div>
 
+      <!-- Botón borrar -->
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+        <button class="btn btn-o" onclick="borrarConversor()">🗑 Borrar datos</button>
+      </div>
+
       <!-- Campos de conversión -->
       <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-bottom:22px;">
 
@@ -887,6 +892,14 @@ function onTipoChange() {
   document.getElementById('conv-promedio-wrap').style.display = tipo === 'promedio' ? 'flex'  : 'none';
   if (tipo === 'promedio') setPromDefecto();
   else calcConversor();
+}
+
+function borrarConversor() {
+  document.getElementById('inp-cop').value = '';
+  document.getElementById('inp-usd').value = '';
+  document.getElementById('conv-resultado').style.display = 'none';
+  document.getElementById('conv-tabla').innerHTML = '';
+  calcConversor();
 }
 
 function setPromDefecto() {
