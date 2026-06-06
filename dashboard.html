@@ -326,10 +326,10 @@
       </div>
 
       <!-- Campos de conversión -->
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-bottom:22px;">
+      <div id="conv-grid" style="display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-bottom:22px;">
 
         <!-- COP → USD -->
-        <div style="background:var(--v6);border:1.5px solid var(--borde);border-radius:12px;padding:18px 20px;">
+        <div id="panel-cop" style="background:var(--v6);border:1.5px solid var(--borde);border-radius:12px;padding:18px 20px;">
           <div style="font-size:0.68rem;font-weight:700;color:var(--v2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">🇨🇴 Pesos Colombianos (COP)</div>
           <input type="text" id="inp-cop" placeholder="0,00"
             style="width:100%;border:none;background:transparent;font-size:1.6rem;font-weight:800;color:var(--v1);outline:none;"
@@ -339,14 +339,14 @@
 
         <!-- Icono central -->
         <div style="text-align:center;">
-          <button onclick="intercambiar()" title="Intercambiar valores"
-            style="background:var(--blanco);border:2px solid var(--v3);border-radius:50%;width:42px;height:42px;font-size:1.2rem;cursor:pointer;color:var(--v3);transition:all .2s;"
+          <button id="btn-intercambiar" onclick="intercambiar()" title="Intercambiar paneles"
+            style="background:var(--blanco);border:2px solid var(--v3);border-radius:50%;width:42px;height:42px;font-size:1.2rem;cursor:pointer;color:var(--v3);transition:all .3s;"
             onmouseover="this.style.background='var(--v2)';this.style.color='white'"
             onmouseout="this.style.background='var(--blanco)';this.style.color='var(--v3)'">⇄</button>
         </div>
 
         <!-- USD → COP -->
-        <div style="background:var(--v6);border:1.5px solid var(--borde);border-radius:12px;padding:18px 20px;">
+        <div id="panel-usd" style="background:var(--v6);border:1.5px solid var(--borde);border-radius:12px;padding:18px 20px;">
           <div style="font-size:0.68rem;font-weight:700;color:var(--v2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">🇺🇸 Dólares (USD)</div>
           <input type="text" id="inp-usd" placeholder="0.0000"
             style="width:100%;border:none;background:transparent;font-size:1.6rem;font-weight:800;color:var(--v1);outline:none;"
@@ -900,11 +900,18 @@ function onTipoChange() {
 }
 
 function intercambiar() {
-  const copVal = document.getElementById('inp-cop').value;
-  const usdVal = document.getElementById('inp-usd').value;
-  document.getElementById('inp-cop').value = usdVal;
-  document.getElementById('inp-usd').value = copVal;
-  convertFromCOP();
+  const grid = document.getElementById('conv-grid');
+  const panelCOP = document.getElementById('panel-cop');
+  const panelUSD = document.getElementById('panel-usd');
+  const btn     = document.getElementById('btn-intercambiar');
+  // Intercambiar posición en el DOM
+  if (panelCOP.previousElementSibling === null || panelCOP.compareDocumentPosition(panelUSD) & 4) {
+    grid.insertBefore(panelUSD, panelCOP);
+  } else {
+    grid.insertBefore(panelCOP, panelUSD);
+  }
+  // Rotar flecha visualmente
+  btn.style.transform = btn.style.transform === 'rotate(180deg)' ? '' : 'rotate(180deg)';
 }
 
 function borrarConversor() {
