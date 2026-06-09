@@ -17,7 +17,7 @@ def fetch_latest():
     return r.json()
 
 def expand(raw):
-    ayer = date.today() - timedelta(days=1)  # solo hasta ayer
+    hoy = date.today()
     expanded = {}
     raw_sorted = sorted(raw, key=lambda r: r["vigenciadesde"], reverse=True)
     for rec in raw_sorted:
@@ -25,17 +25,17 @@ def expand(raw):
         desde = date.fromisoformat(rec["vigenciadesde"][:10])
         hasta = date.fromisoformat(rec["vigenciahasta"][:10])
         d = desde
-        while d <= hasta and d <= ayer:
+        while d <= hasta and d <= hoy:
             k = d.isoformat()
             if k not in expanded:
                 expanded[k] = trm
             d += timedelta(days=1)
-    # Rellenar huecos hasta ayer con el último TRM conocido
+    # Rellenar huecos hasta hoy con el último TRM conocido
     if expanded:
         ultima = date.fromisoformat(max(expanded.keys()))
         ultimo_trm = expanded[ultima.isoformat()]
         d = ultima + timedelta(days=1)
-        while d <= ayer:
+        while d <= hoy:
             expanded[d.isoformat()] = ultimo_trm
             d += timedelta(days=1)
     return expanded

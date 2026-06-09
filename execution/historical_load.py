@@ -41,7 +41,7 @@ def expand_records(raw):
     """Expande registros usando el más reciente como prioridad.
     Fechas sin dato hasta hoy se rellenan con el último TRM conocido."""
     expanded = {}
-    ayer = date.today() - timedelta(days=1)  # solo hasta ayer
+    hoy = date.today()
 
     # Paso 1: procesar de más reciente a más antiguo — el registro más nuevo manda
     raw_sorted = sorted(raw, key=lambda r: r["vigenciadesde"], reverse=True)
@@ -50,18 +50,18 @@ def expand_records(raw):
         desde = date.fromisoformat(rec["vigenciadesde"][:10])
         hasta = date.fromisoformat(rec["vigenciahasta"][:10])
         d = desde
-        while d <= hasta and d <= ayer:
+        while d <= hasta and d <= hoy:
             k = d.isoformat()
             if k not in expanded:
                 expanded[k] = trm
             d += timedelta(days=1)
 
-    # Paso 2: rellenar huecos hasta ayer con el último TRM conocido
+    # Paso 2: rellenar huecos hasta hoy con el último TRM conocido
     if expanded:
         ultima_fecha = date.fromisoformat(max(expanded.keys()))
         ultimo_trm   = expanded[ultima_fecha.isoformat()]
         d = ultima_fecha + timedelta(days=1)
-        while d <= ayer:
+        while d <= hoy:
             expanded[d.isoformat()] = ultimo_trm
             d += timedelta(days=1)
 
